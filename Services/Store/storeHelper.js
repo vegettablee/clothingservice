@@ -158,7 +158,6 @@ const sectionSearch = async (lat, lon, rad, fields, query) => {
   let diagonals = points.diagonalMidpoints;
 
   let otherStores = await fetchSectionData(diagonals, rad, fields, query);
-  console.log(otherStores);
   return otherStores;
 };
 
