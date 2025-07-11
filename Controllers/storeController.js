@@ -23,6 +23,8 @@ const handleNearbyStores = async () => {
     fields,
     thriftQuery
   );
+  // next step is to check with database if the stores that are returned are already in there, if so
+  // then we only take the unique stores, send to llm, then return that
 };
 
 // handleNearbyStores();
