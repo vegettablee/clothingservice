@@ -28,7 +28,7 @@ const compareWithDB = async (uniqueStores, idsToCheck) => {
 const processStores = async (rawStores) => {
   let seen = new Set();
 
-  let mergedStores = rawStores.flatMap((entry) => entry.places);
+  let mergedStores = rawStores.flatMap((entry) => entry.places); // flattens everything into one array
 
   let uniqueStores = mergedStores.filter((place, index) => {
     // uniqueStores filters out all of the duplicate stores

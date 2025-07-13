@@ -12,4 +12,15 @@ const returnNullStore = () => {
   };
 };
 
-module.exports = { returnStoreFormat, returnNullStore };
+const LLMStoreFormat = (num_of_reviews) => {
+  return {
+    Name: "N/A",
+    Website: "N/A",
+    ReviewSummary: "N/A",
+    Reviews: Array.from({ length: num_of_reviews }, () => ({
+      text: "N/A",
+    })),
+  };
+};
+
+module.exports = { returnStoreFormat, returnNullStore, LLMStoreFormat };
