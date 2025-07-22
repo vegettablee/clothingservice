@@ -1,40 +1,42 @@
 require("dotenv").config();
 const OpenAI = require("openai").default;
 const client = new OpenAI({ apiKey: process.env.GPT_API_KEY });
+const { zodTextFormat } = require("openai/helpers/zod");
+const { z } = require("zod");
 // const exampleStore = require("../data_store.js");
 const { LLMStoreFormat } = require("../../Models/store.js");
 
 const gpt_model = "gpt-4.1";
 
-const categorizer_role =
-  "Categorize secondhand stores: \
-PRIMARY (Thrift Stores | Consignment Shops | Buy/Sell Stores | Designer Resale | Vintage Boutiques - can overlap with +), \
-FUNDING (Donation-based | Purchase-based), \
-INVENTORY (Vintage | Secondhand Designer | Mall/Trendy Clothes | Everything/Mixed). \
-Also provide a brief summary of the store in 1-2 sentences. \
-\n\
-Format:\n\
-Primary: [X] | Funding: [X] | Inventory: [X] | Summary: [Short, 1-2 sentence overview]"; // change the return format to JSON
+const LLMInstructions = `
+You are an expert second-hand clothing store analyst, Please categorize all second-hand clothing stores
+in succession according to the following criteria:
+
+• PRIMARY: one of ["Thrift Stores", "Consignment Shops", "Buy/Sell Stores", "Designer Resale", "Vintage Boutiques"] (may overlap)
+• FUNDING: one of ["Donation-based", "Purchase-based"]
+• INVENTORY: one of ["Vintage", "Secondhand Designer", "Mall/Trendy Clothes", "Everything/Mixed"]
+• SUMMARY: a 1-2 sentence overview of the store
+• ESTIMATED PRICE-RANGE: an approximate price bracket (e.g. "$", "$$", "$$$")`;
 
 const stores_per_batch = 10;
 const reviews_per_store = 3;
 
 const LLMStoreFetch = async (stores) => {
-  batch = [];
-  for (let counter = 0; counter < stores.length(); counter++) {
-    if (counter + 1 == stores.length()) {
+  let batch = [];
+  for (let counter = 0; counter < stores.length; counter++) {
+    if (counter + 1 == stores.length) {
       // this is the last iteration of the batch, so just send whatever is left
       batch.append(stores[counter]);
       content = format_store_data(batch);
-      // callLLM(content);
-    } else if (counter != 0 && batch.length() == stores_per_batch) {
+      callLLM(content);
+    } else if (counter != 0 && batch.length == stores_per_batch) {
       // not the first index, but 10 stores have been reached
-      batch.append(stores[counter]);
+      batch.push(stores[counter]);
       content = format_store_data(batch);
-      // callLLM(content);
+      callLLM(content);
       batch = [];
     } else {
-      batch.append(stores[counter]);
+      batch.push(stores[counter]);
     }
   }
 };
@@ -51,7 +53,7 @@ const format_reviews = (reviews, contentPayLoad) => {
     reviews_to_send.push(review.originalText.text);
   }
 
-  for (index in reviews_to_send) {
+  for (let index = 0; index < reviews_to_send.length; index++) {
     contentPayLoad.Reviews[index].text = reviews_to_send[index];
   }
 };
@@ -69,7 +71,7 @@ const format_store_data = (stores) => {
 
   let content = []; // this is an array of store objects following the JSON format in store.js
 
-  for (let store in stores) {
+  for (const store of stores) {
     let contentPayLoad = LLMStoreFormat(reviews_per_store);
 
     if (store.displayName?.text !== undefined) {
@@ -87,29 +89,48 @@ const format_store_data = (stores) => {
     content.push(contentPayLoad);
   }
 
+  console.log(content);
+  callLLM(content);
   return content;
-  console.log(contentPayLoad);
 };
 
-const callLLM = async (stores) => {
-  const response = await openai.responses.create({
-    store: false,
-    model: gpt_model,
-    tools: [
-      {
-        type: "web_search_preview",
-        search_context_size: "medium",
-      },
-    ],
-    input: [
-      {
-        role: categorizer_role,
-        content: stores, // batch of 10 stores with their information in json format
-      },
-    ],
-    background: true,
+const callLLM = async (contents) => {
+  const StoreEntry = z.object({
+    Primary: z.enum([
+      "Thrift Stores",
+      "Consignment Shops",
+      "Buy/Sell Stores",
+      "Designer Resale",
+      "Vintage Boutiques",
+    ]),
+    Funding: z.enum(["Donation-based", "Purchase-based"]),
+    Inventory: z.enum([
+      "Vintage",
+      "Secondhand Designer",
+      "Mall/Trendy Clothes",
+      "Everything/Mixed",
+    ]),
+    Summary: z.string(),
+    "Estimated Price-Range": z.enum(["$", "$$", "$$$", "$$$$"]),
   });
-  let storeInformation = await response.output_text;
+
+  const StoreList = z.object({
+    stores: z.array(StoreEntry),
+  });
+
+  const response = await client.responses.parse({
+    model: gpt_model,
+    instructions: LLMInstructions,
+    input: [
+      { role: "system", content: LLMInstructions },
+      { role: "user", content: JSON.stringify(contents) },
+    ],
+    text: {
+      format: zodTextFormat(StoreList, "store_list"),
+    },
+  });
+  let store_list = response.output_parsed;
+  console.log(store_list);
   // storeInformation is going to be an array of json objects, parse this, format, add it to the database as the next step
 };
 
