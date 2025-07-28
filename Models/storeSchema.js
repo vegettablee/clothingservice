@@ -9,17 +9,12 @@ const AuthorAttributionSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const PhotoSchema = new mongoose.Schema(
-  {
-    name: String,
-    widthPx: Number,
-    heightPx: Number,
-    authorAttributions: [AuthorAttributionSchema],
-    flagContentUri: String,
-    googleMapsUri: String,
-  },
-  { _id: false }
-);
+const PhotoSchema = new mongoose.Schema({
+  name: String,
+  widthPx: Number,
+  heightPx: Number,
+  s3Key: String,
+});
 
 const ReviewTextSchema = new mongoose.Schema(
   {
@@ -76,6 +71,11 @@ const PlaceSchema = new mongoose.Schema({
   reviews: [ReviewSchema],
   photos: [PhotoSchema],
   generativeSummary: GenerativeSummarySchema,
+
+  Primary: { type: String, required: true },
+  Funding: { type: String, required: true },
+  Inventory: { type: String, required: true },
+  Summary: { type: String, required: true },
 });
 
 let Place = mongoose.model("Place", PlaceSchema);

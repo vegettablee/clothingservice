@@ -11,9 +11,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.850.0",
+    "archiver": "^7.0.1",
+    "axios": "^1.11.0",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
     "openai": "^5.9.0",
+    "sharp": "^0.34.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {

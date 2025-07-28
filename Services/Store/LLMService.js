@@ -5,6 +5,7 @@ const { zodTextFormat } = require("openai/helpers/zod");
 const { z } = require("zod");
 // const exampleStore = require("../data_store.js");
 const { LLMStoreFormat } = require("../../Models/store.js");
+const { addToDB } = require("../../s3.js");
 
 const gpt_model = "gpt-4.1";
 
@@ -12,11 +13,13 @@ const LLMInstructions = `
 You are an expert second-hand clothing store analyst, Please categorize all second-hand clothing stores
 in succession according to the following criteria:
 
-• PRIMARY: one of ["Thrift Stores", "Consignment Shops", "Buy/Sell Stores", "Designer Resale", "Vintage Boutiques"] (may overlap)
+
+• PRIMARY: one of ["Thrift Store", "Consignment Shop", "Buy/Sell Store", "Designer Resale", "Vintage Boutique"] (may overlap)
 • FUNDING: one of ["Donation-based", "Purchase-based"]
 • INVENTORY: one of ["Vintage", "Secondhand Designer", "Mall/Trendy Clothes", "Everything/Mixed"]
-• SUMMARY: a 1-2 sentence overview of the store
-• ESTIMATED PRICE-RANGE: an approximate price bracket (e.g. "$", "$$", "$$$")`;
+• SUMMARY: a 1-2 sentence overview of the store, with at least one positive, but realistic statement at the end.
+• ESTIMATED PRICE-RANGE: an approximate price bracket (e.g. "$", "$$", "$$$"), note : ALL major thrift chains such as Goodwill, Savers,
+  Value Village, Salvation Army, and America's Thrift Stores, are automatically categorized as "$" `;
 
 const stores_per_batch = 10;
 const reviews_per_store = 3;
@@ -90,7 +93,8 @@ const format_store_data = (stores) => {
   }
 
   console.log(content);
-  callLLM(content);
+  let newStores = callLLM(content);
+  addToDB(newStores, stores); //
   return content;
 };
 
@@ -131,7 +135,10 @@ const callLLM = async (contents) => {
   });
   let store_list = response.output_parsed;
   console.log(store_list);
-  // storeInformation is going to be an array of json objects, parse this, format, add it to the database as the next step
+  return store_list;
+  // store_list is in the form of stores : [
+  // { primary, funding, inventory },
+  //  ]
 };
 
 module.exports = { format_store_data };
