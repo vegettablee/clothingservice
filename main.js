@@ -7,6 +7,7 @@ const PORT = 3000;
 const storeRoute = require("./Routes/storeRoute");
 const { processStores } = require("./Services/Store/processUniqueStores.js");
 const rawStores = require("./Services/Store/data.js");
+const { handleNearbyStores } = require("./Controllers/storeController.js");
 
 app.use("/stores", storeRoute);
 
@@ -17,7 +18,7 @@ mongoose
   .then(() => {
     console.log("Connected to database!");
     app.listen(PORT, console.log("Server is listening on PORT: " + PORT));
-    processStores(rawStores);
+    handleNearbyStores();
   })
   .catch((err) => {
     console.log("Could not connect to database : " + err);

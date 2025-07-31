@@ -61,16 +61,16 @@ const PlaceSchema = new mongoose.Schema({
     languageCode: { type: String, required: true },
   },
   location: {
-    latitude: { type: Number, required: true },
+    latitude: { type: Number, required: true }, // need this for geospatial indexing
     longitude: { type: Number, required: true },
   },
   shortFormattedAddress: String,
   websiteUri: String,
   rating: Number,
   userRatingCount: Number,
-  reviews: [ReviewSchema],
-  photos: [PhotoSchema],
-  generativeSummary: GenerativeSummarySchema,
+  reviews: { type: [ReviewSchema], required: false },
+  photos: { type: [PhotoSchema], required: false },
+  generativeSummary: { type: GenerativeSummarySchema, required: false },
 
   Primary: { type: String, required: true },
   Funding: { type: String, required: true },

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Place = require("../../Models/storeSchema.js");
 
 const compareWithDB = async (uniqueStores, idsToCheck) => {
+  let existsInDB = false;
   const existingIds = await Place.find(
     { id: { $in: idsToCheck } },
     { id: 1, _id: 0 }
@@ -21,14 +22,28 @@ const compareWithDB = async (uniqueStores, idsToCheck) => {
       return true;
     }
   });
+  if (unprocessedStores.length === 0) {
+    existsInDB = true;
+  }
   console.log("Stores that need to be sent to LLM: " + unprocessedStores);
-  return unprocessedStores;
+  return [unprocessedStores, existsInDB];
 };
 
 const processStores = async (rawStores) => {
   let seen = new Set();
 
-  let mergedStores = rawStores.flatMap((entry) => entry.places); // flattens everything into one array
+  // Handle both single object and array of objects formats
+  let mergedStores;
+  if (Array.isArray(rawStores)) {
+    // If rawStores is an array of objects with places arrays
+    mergedStores = rawStores.flatMap((entry) => entry.places);
+  } else if (rawStores && rawStores.places) {
+    // If rawStores is a single object with a places array
+    mergedStores = rawStores.places;
+  } else {
+    // If rawStores is already an array of places
+    mergedStores = rawStores;
+  }
 
   let uniqueStores = mergedStores.filter((place, index) => {
     // uniqueStores filters out all of the duplicate stores
@@ -43,7 +58,7 @@ const processStores = async (rawStores) => {
 
   let idsToCheck = uniqueStores.map((place) => place.id); // returns a string of ids only to check with the database
 
-  let unprocessedStores = compareWithDB(uniqueStores, idsToCheck);
+  let unprocessedStores = await compareWithDB(uniqueStores, idsToCheck);
 
   return unprocessedStores;
 };

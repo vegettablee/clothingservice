@@ -80,7 +80,7 @@ const makePayLoad = (lat, lon, query, rad) => {
   let point = fetchPoints(lon, lat, rad);
   return {
     textQuery: query,
-    pageSize: 10,
+    pageSize: 2,
     rankPreference: "DISTANCE",
     locationRestriction: {
       rectangle: {

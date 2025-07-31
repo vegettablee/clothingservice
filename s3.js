@@ -17,7 +17,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
-const { zipFiles, downloadPhoto } = require("./fileOps");
+const { zipFiles, downloadPhoto } = require("./Services/Store/fileOps.js");
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION, // e.g., "us-east-1"
@@ -43,30 +43,39 @@ async function listBuckets() {
   }
 }
 
-async function bundleAndStore(photos, zipName) {
+async function bundleAndStore(photos, fileName) {
   let paths = [];
   for (photo of photos) {
     console.log("Processing photo:", photo.name);
     console.log("authorAttributions:", photo.authorAttributions);
-    console.log("authorAttributions length:", photo.authorAttributions ? photo.authorAttributions.length : "undefined");
-    
+    console.log(
+      "authorAttributions length:",
+      photo.authorAttributions ? photo.authorAttributions.length : "undefined"
+    );
+
     // Check if photo has authorAttributions with photoUri
     if (!photo.authorAttributions || photo.authorAttributions.length === 0) {
-      console.log("Skipping photo without authorAttributions:", photo.name || "unknown");
+      console.log(
+        "Skipping photo without authorAttributions:",
+        photo.name || "unknown"
+      );
       continue;
     }
-    
+
     console.log("Entering try block for photo:", photo.name);
     try {
       // Get the first author's photoUri
       const photoUri = photo.authorAttributions[0].photoUri;
       console.log("photoUri found:", photoUri);
-      
+
       if (!photoUri) {
-        console.log("Skipping photo without photoUri:", photo.name || "unknown");
+        console.log(
+          "Skipping photo without photoUri:",
+          photo.name || "unknown"
+        );
         continue;
       }
-      
+
       let outputPath = await downloadPhoto(photoUri);
       console.log(photo.name + " is downloaded");
       paths.push(outputPath);
@@ -86,19 +95,18 @@ async function bundleAndStore(photos, zipName) {
     return;
   }
 
-  let baseKey = zipName.replaceAll(".zip", "");
-  const uuid = uuidv4();
-  
+  let baseKey = fileName;
+
   console.log("Generated base key:", baseKey);
-  console.log("Generated UUID:", uuid);
 
   // 3) Upload individual JPG files to S3
-  for(let index = 0; index < paths.length; index++) {
-    const photoKey = `${baseKey}/${uuid}/photo_${index}.jpg`;
-    
+  for (let index = 0; index < paths.length; index++) {
+    let uuid = uuidv4();
+    let photoKey = `${baseKey}/${uuid}.jpg`;
+
     // Read the file as a buffer
     const photoBuffer = fs.readFileSync(paths[index]);
-    
+
     await s3Client.send(
       new PutObjectCommand({
         Bucket: bucketName,
@@ -107,10 +115,12 @@ async function bundleAndStore(photos, zipName) {
         ContentType: "image/jpeg",
       })
     );
-    console.log("uploaded photo " + index + " to s3://" + bucketName + "/" + photoKey);
+    console.log(
+      "uploaded photo " + index + " to s3://" + bucketName + "/" + photoKey
+    );
   }
 
-  console.log(`✅ All photos uploaded to s3://${bucketName}/${baseKey}/${uuid}/`);
+  console.log(`✅ All photos uploaded to s3://${bucketName}/${baseKey}/`);
 
   // (Optional) Clean up local files
   paths.forEach((p) => {
@@ -120,26 +130,92 @@ async function bundleAndStore(photos, zipName) {
       // File doesn't exist, that's okay
     }
   });
+  let s3key = baseKey;
+  return s3key; // to put in database
 }
 
-const addToDB = async (newStores, extraStoreContent) => {
-  // newStores is the LLM information categorization, the extraStoreContent has the metadata, the reviews, photos, name, etc
-  const fileName = "photos";
+const createSchema = (newStores, extraStoreContent, s3keys) => {
   let storeSchemas = [];
-  let filePaths = [];
 
   for (let index = 0; index < extraStoreContent.length; index++) {
-    let store = await Place.create(); // create schema
-    let zipName = extraStoreContent[index].displayName.text.replaceAll(" ", "");
-    zipName = zipName + ".zip";
-    bundleAndStore(extraStoreContent[index].photos, zipName);
+    // Get the store data
+    const storeData = extraStoreContent[index];
+    const llmData = newStores.stores[index];
+    const s3Key = s3keys[index];
 
-    // Put all data into store schema, then append to storeSchemas array
+    console.log(`Processing store ${index}:`, {
+      storeDataExists: !!storeData,
+      llmDataExists: !!llmData,
+      s3KeyExists: !!s3Key,
+      llmData: llmData,
+    });
+
+    // Create photo objects with S3 keys
+    const photos = storeData.photos
+      ? storeData.photos.map((photo, photoIndex) => ({
+          name: photo.name,
+          widthPx: photo.widthPx,
+          heightPx: photo.heightPx,
+          s3Key: `${s3Key}/photo_${photoIndex}.jpg`,
+        }))
+      : [];
+
+    // Create the Place document
+    const placeData = {
+      // Required fields from Google Places API
+      id: storeData.id,
+      displayName: {
+        text: storeData.displayName.text,
+        languageCode: storeData.displayName.languageCode,
+      },
+      location: {
+        latitude: storeData.location.latitude,
+        longitude: storeData.location.longitude,
+      },
+
+      // Optional fields from Google Places API
+      shortFormattedAddress: storeData.shortFormattedAddress,
+      websiteUri: storeData.websiteUri,
+      rating: storeData.rating,
+      userRatingCount: storeData.userRatingCount,
+      reviews: storeData.reviews || [],
+      photos: photos,
+      generativeSummary: storeData.generativeSummary,
+
+      // Required fields from LLM processing
+      Primary: llmData?.Primary || "Not specified",
+      Funding: llmData?.Funding || "Not specified",
+      Inventory: llmData?.Inventory || "Not specified",
+      Summary: llmData?.Summary || "Not specified",
+      "Estimated Price-Range": llmData?.["Estimated Price-Range"] || "$",
+    };
+
+    // Create and validate the schema
+    const store = new Place(placeData);
+    storeSchemas.push(store);
   }
-}; // add to schema
+
+  return storeSchemas;
+};
+
+const addPhotosToS3 = async (newStores, extraStoreContent) => {
+  // newStores is the LLM information categorization, the extraStoreContent has the metadata, the reviews, photos, name, etc
+  let storeSchemas = [];
+  let s3Keys = [];
+
+  // First, upload all photos to S3 and collect the keys
+  for (let index = 0; index < extraStoreContent.length; index++) {
+    let fileName = extraStoreContent[index].displayName.text.replaceAll(
+      " ",
+      ""
+    );
+    let s3key = await bundleAndStore(extraStoreContent[index].photos, fileName);
+    s3Keys.push(s3key);
+  }
+  let validatedSchemas = createSchema(newStores, extraStoreContent, s3Keys);
+  return validatedSchemas;
+};
 
 listBuckets();
 
-addToDB(exampleStores, exampleStores);
-
-module.exports = { addToDB };
+module.exports = { addPhotosToS3 };

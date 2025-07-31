@@ -5,7 +5,8 @@ const { zodTextFormat } = require("openai/helpers/zod");
 const { z } = require("zod");
 // const exampleStore = require("../data_store.js");
 const { LLMStoreFormat } = require("../../Models/store.js");
-const { addToDB } = require("../../s3.js");
+const { addPhotosToS3 } = require("../../s3.js");
+const { addToDB } = require("./storeService.js");
 
 const gpt_model = "gpt-4.1";
 
@@ -25,23 +26,33 @@ const stores_per_batch = 10;
 const reviews_per_store = 3;
 
 const LLMStoreFetch = async (stores) => {
-  let batch = [];
+  let batch = []; // array of the current stores batch being sent
+  let curatedStores = []; // this holds an array of all the LLM information
+  let storeSchemas = [];
+
   for (let counter = 0; counter < stores.length; counter++) {
-    if (counter + 1 == stores.length) {
+    if (counter + 1 === stores.length) {
       // this is the last iteration of the batch, so just send whatever is left
-      batch.append(stores[counter]);
-      content = format_store_data(batch);
-      callLLM(content);
-    } else if (counter != 0 && batch.length == stores_per_batch) {
-      // not the first index, but 10 stores have been reached
       batch.push(stores[counter]);
       content = format_store_data(batch);
-      callLLM(content);
-      batch = [];
+      let categorizedStores = await callLLM(content);
+      let batchSchemas = await addPhotosToS3(categorizedStores, batch);
+      storeSchemas.push(batchSchemas);
+    } else if (stores_per_batch === batch.length) {
+      // if the amount of stores per batch is reached, send the current batch
+
+      content = format_store_data(batch);
+      let categorizedStores = callLLM(content);
+      let batchSchemas = await addPhotosToS3(categorizedStores, batch);
+      storeSchemas.push(batchSchemas);
+      batch = []; // reset the batch
+      batch.push(stores[counter]); // add the most recent store
     } else {
       batch.push(stores[counter]);
     }
   }
+  storeSchemas = storeSchemas.flat(); // flattens all the schemas into a non-nested array
+  return storeSchemas;
 };
 
 const format_reviews = (reviews, contentPayLoad) => {
@@ -93,8 +104,6 @@ const format_store_data = (stores) => {
   }
 
   console.log(content);
-  let newStores = callLLM(content);
-  addToDB(newStores, stores); //
   return content;
 };
 
@@ -141,4 +150,4 @@ const callLLM = async (contents) => {
   //  ]
 };
 
-module.exports = { format_store_data };
+module.exports = { format_store_data, LLMStoreFetch };
