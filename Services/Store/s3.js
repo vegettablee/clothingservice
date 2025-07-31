@@ -8,16 +8,16 @@ const {
 } = require("@aws-sdk/client-s3");
 
 const mongoose = require("mongoose");
-const Place = require("./Models/storeSchema.js");
+const Place = require("../../Models/storeSchema.js");
 
-const exampleStores = require("./data_store.js");
+const exampleStores = require("../../data_store.js");
 const axios = require("axios");
 const sharp = require("sharp");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
-const { zipFiles, downloadPhoto } = require("./Services/Store/fileOps.js");
+const { zipFiles, downloadPhoto } = require("./fileOps.js");
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION, // e.g., "us-east-1"
@@ -169,8 +169,12 @@ const createSchema = (newStores, extraStoreContent, s3keys) => {
         languageCode: storeData.displayName.languageCode,
       },
       location: {
-        latitude: storeData.location.latitude,
-        longitude: storeData.location.longitude,
+        type: "Point",
+        coordinates: [
+          storeData.location.longitude,
+          storeData.location.latitude,
+          ,
+        ],
       },
 
       // Optional fields from Google Places API

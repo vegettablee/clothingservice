@@ -29,11 +29,14 @@ const handleNearbyStores = async () => {
   );
   console.log(unfilteredStores);
   let filteredStores = await processStores(unfilteredStores);
-  if (filteredStores[1] != true) {
+  if (filteredStores[1] === true) {
     // filteredStores[1] is a true or false that specifies if every store is already in the DB, hence, don't call LLM
+    console.log("No stores needed to be added to database.");
+    // fetch stores from database with geospatial indexing
+    // return to client
+  } else {
     let storeSchemas = await LLMStoreFetch(filteredStores[0]);
     await addToDB(storeSchemas);
-  } else {
     // fetch stores from database with geospatial indexing
     // return to client
   }

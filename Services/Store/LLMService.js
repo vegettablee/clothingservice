@@ -5,7 +5,7 @@ const { zodTextFormat } = require("openai/helpers/zod");
 const { z } = require("zod");
 // const exampleStore = require("../data_store.js");
 const { LLMStoreFormat } = require("../../Models/store.js");
-const { addPhotosToS3 } = require("../../s3.js");
+const { addPhotosToS3 } = require("./s3.js");
 const { addToDB } = require("./storeService.js");
 
 const gpt_model = "gpt-4.1";

@@ -61,8 +61,20 @@ const PlaceSchema = new mongoose.Schema({
     languageCode: { type: String, required: true },
   },
   location: {
-    latitude: { type: Number, required: true }, // need this for geospatial indexing
-    longitude: { type: Number, required: true },
+    type: {
+      type: String, // “type” must be 'Point'
+      enum: ["Point"],
+      required: true,
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number], // [ longitude, latitude ]
+      required: true,
+      validate: {
+        validator: (coords) => coords.length === 2,
+        message: "coordinates must be [lng, lat]",
+      },
+    },
   },
   shortFormattedAddress: String,
   websiteUri: String,
@@ -77,6 +89,8 @@ const PlaceSchema = new mongoose.Schema({
   Inventory: { type: String, required: true },
   Summary: { type: String, required: true },
 });
+
+PlaceSchema.index({ location: "2dsphere" }); // to enable geo spatial indexing
 
 let Place = mongoose.model("Place", PlaceSchema);
 

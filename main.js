@@ -6,7 +6,6 @@ const app = express();
 const PORT = 3000;
 const storeRoute = require("./Routes/storeRoute");
 const { processStores } = require("./Services/Store/processUniqueStores.js");
-const rawStores = require("./Services/Store/data.js");
 const { handleNearbyStores } = require("./Controllers/storeController.js");
 
 app.use("/stores", storeRoute);

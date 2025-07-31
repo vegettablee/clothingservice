@@ -17,15 +17,16 @@ const compareWithDB = async (uniqueStores, idsToCheck) => {
       console.log(
         "Duplicate in database, id : " + place.id + " at index " + index
       );
+      existsInDB = true;
       return false;
     } else {
       return true;
     }
   });
-  if (unprocessedStores.length === 0) {
-    existsInDB = true;
+  if (existsInDB != true) {
+    console.log("Stores that need to be sent to LLM: " + unprocessedStores);
   }
-  console.log("Stores that need to be sent to LLM: " + unprocessedStores);
+
   return [unprocessedStores, existsInDB];
 };
 
