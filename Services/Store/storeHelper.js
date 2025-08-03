@@ -1,95 +1,147 @@
 const { returnStoreFormat, returnNullStore } = require("../../Models/store");
+const turf = require("@turf/turf");
 
-let apiKey = "AIzaSyDHt09CHn1btwiEXQ3UeOeZenMX0ZK9GNU";
+let apiKey = "AIzaSyCL7RPHimo9Rw5hbaYyhov6YkXwRomqRx4";
 let url =
   "https://places.googleapis.com/v1/places:searchText" + "?key=" + apiKey;
 
 function fetchPoints(centerLongitude, centerLatitude, radiusMeters) {
-  // Earth's radius in meters
-  const EARTH_RADIUS = 6371000;
-  // Convert radius from meters to degrees (approximately)
-  // This is a simple approximation and works best for small distances
-  const radiusLongitude =
-    (radiusMeters /
-      (EARTH_RADIUS * Math.cos((centerLatitude * Math.PI) / 180))) *
-    (180 / Math.PI);
-  const radiusLatitude = (radiusMeters / EARTH_RADIUS) * (180 / Math.PI);
+  // Helper function to round coordinates exactly like your original
+  const roundCoord = (coord) => {
+    if (isNaN(coord) || !isFinite(coord)) {
+      console.error("Invalid coordinate:", coord);
+      return 0;
+    }
+    return Math.round(coord * 1000000) / 1000000;
+  };
 
-  // For an inscribed square, the distance from center to corner is radius
-  // But the distance from center to the middle of each side is radius / sqrt(2)
-  // We're calculating corner points, so we need to adjust by sqrt(2)
-  const squareOffsetLon = (radiusLongitude * Math.sqrt(2)) / 2;
-  const squareOffsetLat = (radiusLatitude * Math.sqrt(2)) / 2;
+  // Create center point
+  const center = turf.point([centerLongitude, centerLatitude]);
+  const radiusKm = radiusMeters / 1000;
 
-  // Calculate the four corners of the inscribed square
+  // Calculate the inscribed square corners using Turf.js
+  // For an inscribed square in a circle, the diagonal equals the diameter
+  // So corner distance from center = radius
+  const cornerDistance = radiusKm;
+
+  // Calculate corners at 45, 135, 225, 315 degrees (NE, NW, SW, SE)
+  const northeast = turf.destination(center, cornerDistance, 45, {
+    units: "kilometers",
+  });
+  const northwest = turf.destination(center, cornerDistance, 135, {
+    units: "kilometers",
+  });
+  const southwest = turf.destination(center, cornerDistance, 225, {
+    units: "kilometers",
+  });
+  const southeast = turf.destination(center, cornerDistance, 315, {
+    units: "kilometers",
+  });
+
+  // Extract coordinates and round them
   const corners = [
     {
-      longitude: centerLongitude + squareOffsetLon,
-      latitude: centerLatitude + squareOffsetLat,
+      longitude: roundCoord(northeast.geometry.coordinates[0]),
+      latitude: roundCoord(northeast.geometry.coordinates[1]),
     }, // Northeast
     {
-      longitude: centerLongitude - squareOffsetLon,
-      latitude: centerLatitude + squareOffsetLat,
+      longitude: roundCoord(northwest.geometry.coordinates[0]),
+      latitude: roundCoord(northwest.geometry.coordinates[1]),
     }, // Northwest
     {
-      longitude: centerLongitude - squareOffsetLon,
-      latitude: centerLatitude - squareOffsetLat,
+      longitude: roundCoord(southwest.geometry.coordinates[0]),
+      latitude: roundCoord(southwest.geometry.coordinates[1]),
     }, // Southwest
     {
-      longitude: centerLongitude + squareOffsetLon,
-      latitude: centerLatitude - squareOffsetLat,
+      longitude: roundCoord(southeast.geometry.coordinates[0]),
+      latitude: roundCoord(southeast.geometry.coordinates[1]),
     }, // Southeast
   ];
 
-  // Changed: Calculate quadrant centers instead of diagonal midpoints for better coverage
+  // Calculate quadrant centers (diagonal midpoints)
+  // These are at half the radius distance in the same directions
+  const quadrantDistance = radiusKm * 0.5;
+
+  const neQuadrant = turf.destination(center, quadrantDistance, 45, {
+    units: "kilometers",
+  });
+  const nwQuadrant = turf.destination(center, quadrantDistance, 135, {
+    units: "kilometers",
+  });
+  const swQuadrant = turf.destination(center, quadrantDistance, 225, {
+    units: "kilometers",
+  });
+  const seQuadrant = turf.destination(center, quadrantDistance, 315, {
+    units: "kilometers",
+  });
+
   const diagonalMidpoints = [
     {
-      // Northeast quadrant center
       name: "Center-NE",
-      longitude: centerLongitude + radiusLongitude * 0.5,
-      latitude: centerLatitude + radiusLatitude * 0.5,
+      longitude: roundCoord(neQuadrant.geometry.coordinates[0]),
+      latitude: roundCoord(neQuadrant.geometry.coordinates[1]),
     },
     {
-      // Northwest quadrant center
       name: "Center-NW",
-      longitude: centerLongitude - radiusLongitude * 0.5,
-      latitude: centerLatitude + radiusLatitude * 0.5,
+      longitude: roundCoord(nwQuadrant.geometry.coordinates[0]),
+      latitude: roundCoord(nwQuadrant.geometry.coordinates[1]),
     },
     {
-      // Southwest quadrant center
       name: "Center-SW",
-      longitude: centerLongitude - radiusLongitude * 0.5,
-      latitude: centerLatitude - radiusLatitude * 0.5,
+      longitude: roundCoord(swQuadrant.geometry.coordinates[0]),
+      latitude: roundCoord(swQuadrant.geometry.coordinates[1]),
     },
     {
-      // Southeast quadrant center
       name: "Center-SE",
-      longitude: centerLongitude + radiusLongitude * 0.5,
-      latitude: centerLatitude - radiusLatitude * 0.5,
+      longitude: roundCoord(seQuadrant.geometry.coordinates[0]),
+      latitude: roundCoord(seQuadrant.geometry.coordinates[1]),
     },
   ];
 
   return {
-    center: { longitude: centerLongitude, latitude: centerLatitude },
+    center: {
+      longitude: roundCoord(centerLongitude),
+      latitude: roundCoord(centerLatitude),
+    },
     corners: corners,
     diagonalMidpoints: diagonalMidpoints,
   };
 }
 
+// Fixed makePayLoad function with coordinate rounding
+// Fixed makePayLoad function with coordinate rounding and proper rectangle ordering
 const makePayLoad = (lat, lon, query, rad) => {
   let point = fetchPoints(lon, lat, rad);
+
+  console.log("latitude : " + lat);
+  console.log("longitude : " + lon);
+  console.log("radius : " + rad);
+
+  console.log("low lon " + point.corners[2].longitude);
+  console.log("low lat " + point.corners[2].latitude);
+  console.log("high lon " + point.corners[0].longitude);
+  console.log("high lat " + point.corners[0].latitude);
+
+  /*
+  console.log("low lat : " + minLat);
+  console.log("low lon : " + minLon);
+  console.log("high lat : " + maxLat);
+  console.log("high lon : " + maxLon);
+  console.log("query : " + query);
+  */
+
   return {
     textQuery: query,
-    pageSize: 2,
+    pageSize: 5,
     rankPreference: "DISTANCE",
     locationRestriction: {
       rectangle: {
         low: {
-          latitude: point.corners[2].latitude,
+          latitude: point.corners[2].latitude, // Southwest corner
           longitude: point.corners[2].longitude,
         },
         high: {
-          latitude: point.corners[0].latitude,
+          latitude: point.corners[0].latitude, // Northeast corner
           longitude: point.corners[0].longitude,
         },
       },
@@ -110,11 +162,14 @@ const findNearbyStores = async (latitude, longitude, rad, fields, query) => {
   if (response.ok) {
     const data = await response.json();
     console.log("FindNearby Stores success!");
+    // console.log("Stores found by googleAPI:", JSON.stringify(data, null, 2));
     let formattedData = returnStoreFormat(data);
     return formattedData;
   } else {
     console.log(response);
     console.log("Error fetching nearby stores");
+    let errorMessage = await response.json();
+    console.error("Error message from API:", errorMessage);
     return returnNullStore();
   }
 };

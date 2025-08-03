@@ -46,6 +46,10 @@ const checkLastSeen = async (clients, longitude, latitude) => {
     console.log("Client is too far away, adding new client to DB.");
     isNearby = false;
     addClientToDB(latitude, longitude); // Add the new client to the database
+  } else {
+    console.log(
+      "Client is within 0.25 miles of the nearest client. So no new client added"
+    ); // Client is nearby, no need to add a new client
   }
 
   // after checking if the threshold is passed, we check if the client is more than 0.25 miles away

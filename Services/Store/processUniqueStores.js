@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Place = require("../../Models/storeSchema.js");
 
 const compareWithDB = async (uniqueStores, idsToCheck) => {
-  let existsInDB = false;
+  let existsInDB = true;
   const existingIds = await Place.find(
     { id: { $in: idsToCheck } },
     { id: 1, _id: 0 }
@@ -17,9 +17,9 @@ const compareWithDB = async (uniqueStores, idsToCheck) => {
       console.log(
         "Duplicate in database, id : " + place.id + " at index " + index
       );
-      existsInDB = true;
       return false;
     } else {
+      existsInDB = false; // even one store not in the database means we need to send it to LLM
       return true;
     }
   });
@@ -32,7 +32,7 @@ const compareWithDB = async (uniqueStores, idsToCheck) => {
 
 const processStores = async (rawStores) => {
   let seen = new Set();
-
+  console.log(rawStores);
   // Handle both single object and array of objects formats
   let mergedStores;
   if (Array.isArray(rawStores)) {
@@ -44,6 +44,10 @@ const processStores = async (rawStores) => {
   } else {
     // If rawStores is already an array of places
     mergedStores = rawStores;
+  }
+  if (mergedStores.length === 0) {
+    // if mergedStores is empty, return an empty array, gets checked in the controller
+    return [];
   }
 
   let uniqueStores = mergedStores.filter((place, index) => {

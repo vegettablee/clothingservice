@@ -143,7 +143,7 @@ const createSchema = (newStores, extraStoreContent, s3keys) => {
     const llmData = newStores.stores[index];
     const s3Key = s3keys[index];
 
-    console.log(`Processing store ${index}:`, {
+    console.log(`Processing store schema at ${index}:`, {
       storeDataExists: !!storeData,
       llmDataExists: !!llmData,
       s3KeyExists: !!s3Key,
@@ -157,6 +157,7 @@ const createSchema = (newStores, extraStoreContent, s3keys) => {
           widthPx: photo.widthPx,
           heightPx: photo.heightPx,
           s3Key: `${s3Key}/photo_${photoIndex}.jpg`,
+          googleMapsUri: photo.googleMapsUri,
         }))
       : [];
 
@@ -173,7 +174,6 @@ const createSchema = (newStores, extraStoreContent, s3keys) => {
         coordinates: [
           storeData.location.longitude,
           storeData.location.latitude,
-          ,
         ],
       },
 

@@ -14,6 +14,7 @@ const PhotoSchema = new mongoose.Schema({
   widthPx: Number,
   heightPx: Number,
   s3Key: String,
+  googleMapsUri: String,
 });
 
 const ReviewTextSchema = new mongoose.Schema(

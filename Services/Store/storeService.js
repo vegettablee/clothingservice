@@ -22,8 +22,7 @@ const fetchNearbyStores = async (
     fields,
     query
   );
-  return stores;
-  /*
+
   if (stores.nextPageToken === null) {
     // there is no next page, hence no other stores in the area, returns all of the stores
     console.log("There is no next page");
@@ -31,7 +30,6 @@ const fetchNearbyStores = async (
   } else {
     console.log("Next page found... starting sectionSearch");
     // splits the original radius into 4 different sections to search, primarily used for dense areas
-    let tempField = "places.displayName";
     let allStores = await sectionSearch(
       latitude,
       longitude,
@@ -43,7 +41,6 @@ const fetchNearbyStores = async (
     console.log(allStores);
     return allStores;
   }
-    */
 };
 
 const addToDB = async (validatedSchemas) => {

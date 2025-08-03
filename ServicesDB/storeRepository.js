@@ -27,6 +27,7 @@ const getNearestStores = async (longitude, latitude, maxDistanceMeters) => {
     return nearbyPlaces;
   } catch (error) {
     console.error("Error querying nearby places:", error);
+    return [];
     throw error;
   }
 };
@@ -48,6 +49,7 @@ const getTopRatedStores = async (longitude, latitude, radiusMiles = 10) => {
     return places;
   } catch (error) {
     console.error("Error fetching top-rated places:", error);
+    return [];
     throw error;
   }
 };
@@ -69,6 +71,7 @@ const getPrimaryType = async (
     return places;
   } catch (error) {
     console.error("Error fetching by primary type:", error);
+    return [];
     throw error;
   }
 };
@@ -90,6 +93,7 @@ const getFundingType = async (
     return places;
   } catch (error) {
     console.error("Error fetching by funding type:", error);
+    return [];
     throw error;
   }
 };

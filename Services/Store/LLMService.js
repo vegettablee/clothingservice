@@ -15,10 +15,10 @@ You are an expert second-hand clothing store analyst, Please categorize all seco
 in succession according to the following criteria:
 
 
-• PRIMARY: one of ["Thrift Store", "Consignment Shop", "Buy/Sell Store", "Designer Resale", "Vintage Boutique"] (may overlap)
+• PRIMARY: one of ["Thrift", "Consignment", "Buy/Sell", "Designer Resale", "Vintage Boutique"] (may overlap)
 • FUNDING: one of ["Donation-based", "Purchase-based"]
 • INVENTORY: one of ["Vintage", "Secondhand Designer", "Mall/Trendy Clothes", "Everything/Mixed"]
-• SUMMARY: a 1-2 sentence overview of the store, with at least one positive, but realistic statement at the end.
+• SUMMARY: a 1-2 sentence analysis of the store, specifically about what they sell, what they are known for, and what makes them unique.
 • ESTIMATED PRICE-RANGE: an approximate price bracket (e.g. "$", "$$", "$$$"), note : ALL major thrift chains such as Goodwill, Savers,
   Value Village, Salvation Army, and America's Thrift Stores, are automatically categorized as "$" `;
 
@@ -110,11 +110,11 @@ const format_store_data = (stores) => {
 const callLLM = async (contents) => {
   const StoreEntry = z.object({
     Primary: z.enum([
-      "Thrift Stores",
-      "Consignment Shops",
-      "Buy/Sell Stores",
+      "Thrift",
+      "Consignment",
+      "Buy/Sell",
       "Designer Resale",
-      "Vintage Boutiques",
+      "Vintage Boutique",
     ]),
     Funding: z.enum(["Donation-based", "Purchase-based"]),
     Inventory: z.enum([
