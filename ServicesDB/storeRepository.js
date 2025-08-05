@@ -32,9 +32,9 @@ const getNearestStores = async (longitude, latitude, maxDistanceMeters) => {
   }
 };
 
-const getTopRatedStores = async (longitude, latitude, radiusMiles = 10) => {
+const getTopRatedStores = async (longitude, latitude, radius) => {
   // Convert miles to meters
-  const radiusMeters = radiusMiles * 1609.34;
+  const radiusMeters = radius; // radius is already in meters
 
   try {
     const query = geoFilter(longitude, latitude, radiusMeters);

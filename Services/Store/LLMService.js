@@ -125,6 +125,7 @@ const callLLM = async (contents) => {
     ]),
     Summary: z.string(),
     "Estimated Price-Range": z.enum(["$", "$$", "$$$", "$$$$"]),
+    hasSecondhandClothing: z.boolean(),
   });
 
   const StoreList = z.object({

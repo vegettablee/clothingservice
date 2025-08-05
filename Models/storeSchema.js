@@ -89,6 +89,7 @@ const PlaceSchema = new mongoose.Schema({
   Funding: { type: String, required: true },
   Inventory: { type: String, required: true },
   Summary: { type: String, required: true },
+  hasSecondhandClothing: { type: Boolean, required: true },
 });
 
 PlaceSchema.index({ location: "2dsphere" }); // to enable geo spatial indexing

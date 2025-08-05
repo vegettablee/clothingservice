@@ -44,10 +44,11 @@ async function listBuckets() {
 }
 
 async function bundleAndStore(photos, fileName) {
+  /*
   let paths = [];
   for (photo of photos) {
-    console.log("Processing photo:", photo.name);
-    console.log("authorAttributions:", photo.authorAttributions);
+    // console.log("Processing photo:", photo.name);
+    // console.log("authorAttributions:", photo.authorAttributions);
     console.log(
       "authorAttributions length:",
       photo.authorAttributions ? photo.authorAttributions.length : "undefined"
@@ -77,7 +78,7 @@ async function bundleAndStore(photos, fileName) {
       }
 
       let outputPath = await downloadPhoto(photoUri);
-      console.log(photo.name + " is downloaded");
+      // console.log(photo.name + " is downloaded");
       paths.push(outputPath);
     } catch (error) {
       console.log(
@@ -130,8 +131,10 @@ async function bundleAndStore(photos, fileName) {
       // File doesn't exist, that's okay
     }
   });
+  */
+  let baseKey = fileName;
   let s3key = baseKey;
-  return s3key; // to put in database
+  return s3key; // to put in database, this is deprecated, but we will keep it for now
 }
 
 const createSchema = (newStores, extraStoreContent, s3keys) => {
@@ -192,6 +195,7 @@ const createSchema = (newStores, extraStoreContent, s3keys) => {
       Inventory: llmData?.Inventory || "Not specified",
       Summary: llmData?.Summary || "Not specified",
       "Estimated Price-Range": llmData?.["Estimated Price-Range"] || "$",
+      hasSecondhandClothing: llmData?.hasSecondhandClothing || false,
     };
 
     // Create and validate the schema

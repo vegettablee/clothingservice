@@ -4,8 +4,8 @@ const Client = require("../Models/clientSchema.js");
 
 // this file are the proximity database queries, used for the client, as well as the
 
-// const thresholdTime = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
-const thresholdTime = 1000 * 60; // 1 minute in milliseconds
+const thresholdTime = 1000 * 60 * 60 * 24 * 30; // 30 days in milliseconds
+// const thresholdTime = 1000 * 20; // 20 seconds in milliseconds
 const maxDistanceMeters = 402.336; // 0.25 miles in meters
 
 // this function checks the lastSeen of the first object in the client collection

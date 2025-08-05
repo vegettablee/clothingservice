@@ -62,7 +62,7 @@ const handleNearbyStores = async (req, res, next) => {
       console.log("Fetching stores from google places API...");
 
       let unfilteredStores = await fetchNearbyStores(
-        // stores that could already be in the DB
+        // all stores from the googleAPI call, could include duplicates
         latitude,
         longitude,
         radius,
@@ -93,12 +93,26 @@ const handleNearbyStores = async (req, res, next) => {
   }
 };
 
-const handleTopRatedStores = async () => {
-  let topRatedStores = await getTopRatedStores(longitude, latitude);
-  return topRatedStores;
+const handleTopRatedStores = async (req, res) => {
+  const longitude = req.query.longitude;
+  console.log("This is the longitude : " + longitude);
+  const latitude = req.query.latitude;
+  console.log("This is the latitude : " + latitude);
+  const radius = req.query.radius;
+
+  let topRatedStores = await getTopRatedStores(longitude, latitude, radius);
+  return res.json(topRatedStores);
 };
 
-const handlePrimaryTypes = async () => {
+const handlePrimaryTypes = async (req, res) => {
+  const longitude = req.query.longitude;
+  console.log("This is the longitude : " + longitude);
+  const latitude = req.query.latitude;
+  console.log("This is the latitude : " + latitude);
+  const radius = req.query.radius;
+
+  let topRatedStores = await getTopRatedStores(longitude, latitude, radius);
+  return res.json(topRatedStores);
   let primaryTypeStores = await getPrimaryType(
     "Buy/Sell Stores",
     longitude,

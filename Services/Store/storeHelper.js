@@ -132,7 +132,7 @@ const makePayLoad = (lat, lon, query, rad) => {
 
   return {
     textQuery: query,
-    pageSize: 5,
+    pageSize: 20,
     rankPreference: "DISTANCE",
     locationRestriction: {
       rectangle: {
