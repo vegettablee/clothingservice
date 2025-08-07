@@ -18,6 +18,7 @@ const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
 const { zipFiles, downloadPhoto } = require("./fileOps.js");
+const { getGooglePlacesPhoto } = require("./s3Helper.js");
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION, // e.g., "us-east-1"
@@ -26,7 +27,7 @@ const s3Client = new S3Client({
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
   },
 });
-
+const PHOTOS_PER_STORE = 4; // number of photos to upload to s3 per store
 const bucketName = "thriftstorephotos";
 
 async function listBuckets() {
@@ -44,9 +45,8 @@ async function listBuckets() {
 }
 
 async function bundleAndStore(photos, fileName) {
-  /*
   let paths = [];
-  for (photo of photos) {
+  for (photo of photos.slice(0, PHOTOS_PER_STORE)) {
     // console.log("Processing photo:", photo.name);
     // console.log("authorAttributions:", photo.authorAttributions);
     console.log(
@@ -66,18 +66,14 @@ async function bundleAndStore(photos, fileName) {
     console.log("Entering try block for photo:", photo.name);
     try {
       // Get the first author's photoUri
-      const photoUri = photo.authorAttributions[0].photoUri;
-      console.log("photoUri found:", photoUri);
+      const photoUri = photo.name;
 
       if (!photoUri) {
-        console.log(
-          "Skipping photo without photoUri:",
-          photo.name || "unknown"
-        );
+        console.log("Skipping photo without name:", photo.name || "unknown");
         continue;
       }
-
-      let outputPath = await downloadPhoto(photoUri);
+      let tempFile = `${uuidv4().split("-")[0]}-${Date.now()}.jpg`;
+      let outputPath = await getGooglePlacesPhoto(photoUri, tempFile);
       // console.log(photo.name + " is downloaded");
       paths.push(outputPath);
     } catch (error) {
@@ -92,7 +88,7 @@ async function bundleAndStore(photos, fileName) {
 
   // Check if we have any photos to process
   if (paths.length === 0) {
-    console.log("No photos to process for:", zipName);
+    console.log("No photos to process for:", photo.name);
     return;
   }
 
@@ -131,8 +127,7 @@ async function bundleAndStore(photos, fileName) {
       // File doesn't exist, that's okay
     }
   });
-  */
-  let baseKey = fileName;
+
   let s3key = baseKey;
   return s3key; // to put in database, this is deprecated, but we will keep it for now
 }
@@ -159,7 +154,7 @@ const createSchema = (newStores, extraStoreContent, s3keys) => {
           name: photo.name,
           widthPx: photo.widthPx,
           heightPx: photo.heightPx,
-          s3Key: `${s3Key}/photo_${photoIndex}.jpg`,
+          s3Key: `${s3Key}`,
           googleMapsUri: photo.googleMapsUri,
         }))
       : [];
@@ -206,8 +201,9 @@ const createSchema = (newStores, extraStoreContent, s3keys) => {
   return storeSchemas;
 };
 
-const addPhotosToS3 = async (newStores, extraStoreContent) => {
+const addPhotosToS3 = (newStores, extraStoreContent) => {
   // newStores is the LLM information categorization, the extraStoreContent has the metadata, the reviews, photos, name, etc
+  console.log("newStores in addPhotosToS3" + newStores.stores);
   let storeSchemas = [];
   let s3Keys = [];
 
@@ -217,8 +213,13 @@ const addPhotosToS3 = async (newStores, extraStoreContent) => {
       " ",
       ""
     );
-    let s3key = await bundleAndStore(extraStoreContent[index].photos, fileName);
-    s3Keys.push(s3key);
+    filename = filename + "-" + uuidv4().split("-")[0]; // add a unique identifier to the filename
+    let s3key = bundleAndStore(extraStoreContent[index].photos, fileName);
+
+    // filename is what is stored in the database, associated with each photo object,
+    //it is the basefolder where ALL the photos are stored in s3 for that particular store,
+    // hence, the client needs to call a separate endpoint here to retrieve the urls from s3 to load them
+    s3Keys.push(fileName);
   }
   let validatedSchemas = createSchema(newStores, extraStoreContent, s3Keys);
   return validatedSchemas;

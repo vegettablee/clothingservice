@@ -221,7 +221,7 @@ const makePayLoadWithToken = (lat, lon, query, rad, token) => {
   let point = fetchPoints(lon, lat, rad);
   return {
     textQuery: query,
-    pageSize: 20,
+    pageSize: 2,
     pageToken: token,
     locationRestriction: {
       rectangle: {

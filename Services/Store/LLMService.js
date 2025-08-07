@@ -29,6 +29,7 @@ const LLMStoreFetch = async (stores) => {
   let batch = []; // array of the current stores batch being sent
   let curatedStores = []; // this holds an array of all the LLM information
   let storeSchemas = [];
+  let batchSchemas = [];
 
   for (let counter = 0; counter < stores.length; counter++) {
     if (counter + 1 === stores.length) {
@@ -36,14 +37,14 @@ const LLMStoreFetch = async (stores) => {
       batch.push(stores[counter]);
       content = format_store_data(batch);
       let categorizedStores = await callLLM(content);
-      let batchSchemas = await addPhotosToS3(categorizedStores, batch);
+      let batchSchemas = addPhotosToS3(categorizedStores, batch);
       storeSchemas.push(batchSchemas);
     } else if (stores_per_batch === batch.length) {
       // if the amount of stores per batch is reached, send the current batch
 
       content = format_store_data(batch);
-      let categorizedStores = callLLM(content);
-      let batchSchemas = await addPhotosToS3(categorizedStores, batch);
+      let categorizedStores = await callLLM(content);
+      let batchSchemas = addPhotosToS3(categorizedStores, batch);
       storeSchemas.push(batchSchemas);
       batch = []; // reset the batch
       batch.push(stores[counter]); // add the most recent store
