@@ -12,6 +12,7 @@ const {
   handleFundingTypes,
   handlePrimaryTypes,
 } = require("./Controllers/storeController.js");
+const { getStorePhotos } = require("./Controllers/s3Controller.js");
 
 app.use("/stores", storeRoute);
 mongoose
@@ -25,6 +26,8 @@ mongoose
     // handleTopRatedStores();
     // handleFundingTypes();
     // handlePrimaryTypes();
+    // const base_key = "PlazaThrift";
+    // getStorePhotos(base_key);
   })
   .catch((err) => {
     console.log("Could not connect to database : " + err);

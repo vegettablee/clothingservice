@@ -6,12 +6,13 @@ const {
   handleTopRatedStores,
   handleFundingTypes,
 } = require("../Controllers/storeController.js");
-const lat = 33.0;
-const long = -97.0;
+
+const { getStorePhotos } = require("../Controllers/s3Controller.js");
 
 router.get("/nearby", handleNearbyStores);
 router.get("/primary", handlePrimaryTypes);
 router.get("/topRated", handleTopRatedStores);
 router.get("/funding", handleFundingTypes);
+router.get("/photos", getStorePhotos);
 
 module.exports = router;

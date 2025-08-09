@@ -94,6 +94,6 @@ const PlaceSchema = new mongoose.Schema({
 
 PlaceSchema.index({ location: "2dsphere" }); // to enable geo spatial indexing
 
-let Place = mongoose.model("Place", PlaceSchema);
+const Place = mongoose.model("Place", PlaceSchema);
 
 module.exports = Place;

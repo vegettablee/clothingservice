@@ -1,50 +1,27 @@
 // this file will be used to add the stores the LLM took in, and sends it back into the database with the id, and all the other information
 require("dotenv").config(); // temp for env variables
-const {
-  S3Client,
-  ListBucketsCommand,
-  createReadStream,
-  PutObjectCommand,
-} = require("@aws-sdk/client-s3");
 
 const mongoose = require("mongoose");
-const Place = require("../../Models/storeSchema.js");
+const Place = require("../Models/storeSchema.js");
 
-const exampleStores = require("../../data_store.js");
 const axios = require("axios");
 const sharp = require("sharp");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
-const { zipFiles, downloadPhoto } = require("./fileOps.js");
-const { getGooglePlacesPhoto } = require("./s3Helper.js");
+const { zipFiles, downloadPhoto } = require("../Services/Store/fileOps.js");
+const { getGooglePlacesPhoto } = require("./s3UploadHelper.js");
+const { createStoreSchemas } = require("../Services/Store/schemaBuilder.js");
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION, // e.g., "us-east-1"
-  credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY,
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-  },
-});
+const { listBuckets } = require("./s3.js");
+const { s3Client } = require("./s3.js"); // Import the S3 client from s3.js
+const { PutObjectCommand } = require("@aws-sdk/client-s3"); // this is the only command used in this file, in bundleAndStore
+
 const PHOTOS_PER_STORE = 4; // number of photos to upload to s3 per store
 const bucketName = "thriftstorephotos";
 
-async function listBuckets() {
-  try {
-    const command = new ListBucketsCommand({});
-    const data = await s3Client.send(command);
-    console.log(
-      "Buckets:",
-      data.Buckets.map((bucket) => bucket.Name)
-    );
-    return data.Buckets;
-  } catch (error) {
-    console.error("Error listing buckets:", error);
-  }
-}
-
-async function bundleAndStore(photos, fileName) {
+const bundleAndStore = async (photos, fileName) => {
   let paths = [];
   for (photo of photos.slice(0, PHOTOS_PER_STORE)) {
     // console.log("Processing photo:", photo.name);
@@ -130,7 +107,7 @@ async function bundleAndStore(photos, fileName) {
 
   let s3key = baseKey;
   return s3key; // to put in database, this is deprecated, but we will keep it for now
-}
+};
 
 const createSchema = (newStores, extraStoreContent, s3keys) => {
   let storeSchemas = [];
@@ -213,7 +190,7 @@ const addPhotosToS3 = (newStores, extraStoreContent) => {
       " ",
       ""
     );
-    filename = filename + "-" + uuidv4().split("-")[0]; // add a unique identifier to the filename
+    fileName = fileName + "-" + uuidv4().split("-")[0]; // add a unique identifier to the filename
     let s3key = bundleAndStore(extraStoreContent[index].photos, fileName);
 
     // filename is what is stored in the database, associated with each photo object,
@@ -221,7 +198,12 @@ const addPhotosToS3 = (newStores, extraStoreContent) => {
     // hence, the client needs to call a separate endpoint here to retrieve the urls from s3 to load them
     s3Keys.push(fileName);
   }
-  let validatedSchemas = createSchema(newStores, extraStoreContent, s3Keys);
+
+  let validatedSchemas = createStoreSchemas(
+    newStores,
+    extraStoreContent,
+    s3Keys
+  );
   return validatedSchemas;
 };
 
