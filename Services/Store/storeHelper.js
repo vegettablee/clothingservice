@@ -1,10 +1,6 @@
 const { returnStoreFormat, returnNullStore } = require("../../Models/store");
 const turf = require("@turf/turf");
 
-let apiKey = process.env.GOOGLE_API_KEY;
-const url =
-  "https://places.googleapis.com/v1/places:searchText" + "?key=" + apiKey;
-
 function fetchPoints(centerLongitude, centerLatitude, radiusMeters) {
   // Helper function to round coordinates exactly like your original
   const roundCoord = (coord) => {
@@ -156,6 +152,7 @@ const findNearbyStores = async (latitude, longitude, rad, fields, query) => {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-FieldMask": fields,
+      "X-Goog-Api-Key": process.env.GOOGLE_API_KEY,
     },
     body: JSON.stringify(payload),
   });
