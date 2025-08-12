@@ -1,8 +1,8 @@
 const { returnStoreFormat, returnNullStore } = require("../../Models/store");
 const turf = require("@turf/turf");
 
-let apiKey = "AIzaSyCL7RPHimo9Rw5hbaYyhov6YkXwRomqRx4";
-let url =
+let apiKey = process.env.GOOGLE_API_KEY;
+const url =
   "https://places.googleapis.com/v1/places:searchText" + "?key=" + apiKey;
 
 function fetchPoints(centerLongitude, centerLatitude, radiusMeters) {

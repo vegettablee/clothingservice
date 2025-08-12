@@ -1,5 +1,4 @@
 require("dotenv").config();
-const mockS3Objects = require("../s3fakedata.js");
 const { s3Client, listBuckets, getObjectsInFolder } = require("./s3.js");
 
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
@@ -7,8 +6,7 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { createS3DBSchema } = require("../Services/Store/schemaBuilder.js");
 const { addS3SchemaToDB } = require("../ServicesDB/s3Repository.js");
 
-const bucketName = "thriftstorephotos";
-const BASE_KEY = "PlazaThrift";
+const bucketName = process.env.AWS_BUCKET_NAME;
 URL_EXPIRATION_DATE = 3600 * 24 * 7; // 7 days in seconds
 
 const generatePresignedUrl = async (bucketName, objectKey) => {

@@ -1,6 +1,4 @@
-/Packages
-package.json
-package-lock.json
+
 .env
 data_store.js
 node_modules/dotenv/

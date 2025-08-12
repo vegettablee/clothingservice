@@ -32,8 +32,8 @@ const mainFields =
 
 const handleNearbyStores = async (req, res, next) => {
   try {
-    // 👇 throws ValidationError if anything’s wrong
     // const { longitude, latitude, radius } = validateNearbyParams(req.query);
+    // fix error handling for clients giving invalid parameters
     const longitude = req.query.longitude;
     console.log("This is the longitude : " + longitude);
     const latitude = req.query.latitude;

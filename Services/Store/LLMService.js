@@ -17,13 +17,16 @@ in succession according to the following criteria:
 
 • PRIMARY: one of ["Thrift", "Consignment", "Buy/Sell", "Designer Resale", "Vintage Boutique"] (may overlap)
 • FUNDING: one of ["Donation-based", "Purchase-based"]
-• INVENTORY: one of ["Vintage", "Secondhand Designer", "Mall/Trendy Clothes", "Everything/Mixed"]
+• INVENTORY: one or more of ["Vintage", "Secondhand Designer", "Mall/Trendy Clothes", "Everything/Mixed"]
 • SUMMARY: a 1-2 sentence analysis of the store, specifically about what they sell, what they are known for, and what makes them unique.
 • ESTIMATED PRICE-RANGE: an approximate price bracket (e.g. "$", "$$", "$$$"), note : ALL major thrift chains such as Goodwill, Savers,
   Value Village, Salvation Army, and America's Thrift Stores, are automatically categorized as "$" `;
 
-const stores_per_batch = 10;
-const reviews_per_store = 3;
+// this needs more work/experimentation in regards to what prompts yield the best data, but so far,
+// it has been pretty accurate
+
+const stores_per_batch = 10; // number of stores to send per batch to the LLM
+const reviews_per_store = 3; // number of reviews to send per store
 
 const LLMStoreFetch = async (stores) => {
   let batch = []; // array of the current stores batch being sent
