@@ -17,7 +17,7 @@ const { getStorePhotos } = require("./Controllers/s3Controller.js");
 app.use("/stores", storeRoute);
 mongoose
   .connect(
-    "mongodb+srv://prestonrank5:NTJcJouF85LvCGQ0@storebackend.y602qva.mongodb.net/Stores-API?retryWrites=true&w=majority&appName=storebackend"
+    process.env.MONGO_CRED
   )
   .then(() => {
     console.log("Connected to database!");
@@ -33,6 +33,5 @@ mongoose
     console.log("Could not connect to database : " + err);
   });
 
-const apiKey = process.env.GOOGLE_API_KEY;
 
 // +`&fieldMask=${encodeURIComponent(fields)}`;
