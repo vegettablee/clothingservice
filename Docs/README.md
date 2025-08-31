@@ -15,3 +15,6 @@ Entry point is main.js, however, most of the important network calls are within 
 To start : 
 run: 
 npm install 
+
+then : 
+node main.js 
