@@ -147,7 +147,7 @@ const makePayLoad = (lat, lon, query, rad) => {
 
 const findNearbyStores = async (latitude, longitude, rad, fields, query) => {
   let payload = makePayLoad(latitude, longitude, query, rad);
-  let response = await fetch(url, {
+  let response = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -243,7 +243,7 @@ const fetchNextPage = async (
   token
 ) => {
   let payload = makePayLoadWithToken(latitude, longitude, query, rad, token);
-  let response = await fetch(url, {
+  let response = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

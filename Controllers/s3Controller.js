@@ -12,14 +12,17 @@ const {
 const getStorePhotos = async (req, res, next) => {
   try {
     const baseKey = req.query.baseKey; // e.g. "PlazaThrift8u9g8h9w"
+    console.log("Base key received : " + baseKey)
     let s3Object = await fetchS3Object(baseKey);
     if (s3Object === null) {
-      console.log("No S3 object found for baseKey:", baseKey);
-      // add logic that if the baseKey does not exist in s3, then we return a response that says invalid baseKey
+      console.log("No S3 object found for baseKey:", baseKey, " creating new object with URLs");
+      // return res.json("");
+      // add logic that if the baseKey does not exist in s3 or places, then we return a response that says invalid baseKey
       await createS3photoURLs(baseKey);
       s3Object = await fetchS3Object(baseKey);
       // re-fetch it from database to confirm it's there
       return res.json(s3Object.photoUris); // return to client
+
     } else {
       if (s3Object.photoUris.length === 0 && s3Object.objectKeys.length > 0) {
         // if photoUris is empty and objectKeys is not empty, fetch new URLs from these objectKeys

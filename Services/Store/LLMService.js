@@ -113,24 +113,29 @@ const format_store_data = (stores) => {
 
 const callLLM = async (contents) => {
   const StoreEntry = z.object({
-    Primary: z.enum([
+  Primary: z.array(
+    z.enum([
       "Thrift",
       "Consignment",
       "Buy/Sell",
       "Designer Resale",
       "Vintage Boutique",
-    ]),
-    Funding: z.enum(["Donation-based", "Purchase-based"]),
-    Inventory: z.enum([
+    ])
+  ),
+  Funding: z.enum(["Donation-based", "Purchase-based"]),
+  Inventory: z.array(
+    z.enum([
       "Vintage",
       "Secondhand Designer",
       "Mall/Trendy Clothes",
       "Everything/Mixed",
-    ]),
-    Summary: z.string(),
-    "Estimated Price-Range": z.enum(["$", "$$", "$$$", "$$$$"]),
-    hasSecondhandClothing: z.boolean(),
-  });
+    ])
+  ),
+  Summary: z.string(),
+  "Estimated Price-Range": z.enum(["$", "$$", "$$$", "$$$$"]),
+  hasSecondhandClothing: z.boolean(),
+});
+
 
   const StoreList = z.object({
     stores: z.array(StoreEntry),

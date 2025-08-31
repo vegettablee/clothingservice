@@ -22,6 +22,7 @@ mongoose
   .then(() => {
     console.log("Connected to database!");
     app.listen(PORT, console.log("Server is listening on PORT: " + PORT));
+    
     // handleNearbyStores(); // this is specifically for t
     // handleTopRatedStores();
     // handleFundingTypes();

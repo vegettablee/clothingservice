@@ -85,15 +85,18 @@ const PlaceSchema = new mongoose.Schema({
   photos: { type: [PhotoSchema], required: false },
   generativeSummary: { type: GenerativeSummarySchema, required: false },
 
-  Primary: { type: String, required: true },
-  Funding: { type: String, required: true },
-  Inventory: { type: String, required: true },
+  // ---- Forced arrays ----
+  Primary: { type: [String], required: true },
+  Funding: { type: [String], required: true },
+  Inventory: { type: [String], required: true },
+
   Summary: { type: String, required: true },
   hasSecondhandClothing: { type: Boolean, required: true },
 });
 
-PlaceSchema.index({ location: "2dsphere" }); // to enable geo spatial indexing
+PlaceSchema.index({ location: "2dsphere" }); // enable geo spatial indexing
 
 const Place = mongoose.model("Place", PlaceSchema);
 
 module.exports = Place;
+
