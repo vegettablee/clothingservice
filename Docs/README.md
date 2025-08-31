@@ -11,3 +11,7 @@ Pre-requisites: Node.js, Express.js, MongoDB, S3
 Environment Variables : Google API_KEY, Open_AI Key, AWS S3 Credentials, MongoDB Creds
 
 Entry point is main.js, however, most of the important network calls are within the storeController.js file 
+
+To start : 
+run: 
+npm install 
