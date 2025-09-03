@@ -1,20 +1,33 @@
-Purpose:
+## Overview
+A Node.js/Express backend service that automatically discovers and enriches thrift store listings using intelligent location-based queries and AI-powered data curation.
+## Core Functionality
+The service handles two main operations:
 
-- At a high level, this backend service is mainly responsible for two main functions:
-  1. Checking the client coordinate's that are being sent in the request, if within 0.25 miles return from DB. 
-  1. Fetching Nearby Stores -> Check if contained in DB(MongoDB) -> If so -> Return nearby stores from DB
-  2. If not -> Send Nearby Stores NOT(from google API) in DB to LLM to parse/curate stores -> Add stores to DB and return nearby stores
-  3. It is also responsible for creating a client database, which is used to return data quicker based on the proximity
-     of the client, based on whether the coordinates were within a certain range. 
+Proximity-Based Retrieval: Checks incoming client coordinates and returns cached results if within 0.25 miles
+Intelligent Store Discovery Pipeline:
 
-Pre-requisites: Node.js, Express.js, MongoDB, S3
-Environment Variables : Google API_KEY, Open_AI Key, AWS S3 Credentials, MongoDB Creds
+Fetch nearby stores from Google Places API
+Check MongoDB for existing store data
+If new stores found → Send to GPT-4 for parsing/curation → Add to database
+Return enriched store listings to client
 
-Entry point is main.js, however, most of the important network calls are within the storeController.js file 
+## Architecture
+Client Request → Coordinate Validation → Database Check → Google Places API → GPT-4 Enrichment → MongoDB Storage → Response
+The system implements client proximity detection to prevent redundant operations and database bloat, while automatically enriching store listings with structured metadata (category, funding model, inventory type).
+Key Features
 
-To start : 
-run: 
-npm install 
+Geospatial Indexing: MongoDB with efficient location-based queries
+AI-Powered Curation: GPT-4 integration for automated store data enrichment
+AWS S3 Integration: Image storage with automated upload/retrieval and database caching
+Smart Proximity Detection: 0.25-mile radius client caching system
+Automated Deduplication: Prevents redundant database entries
 
-then : 
-node main.js 
+Tech Stack
+Node.js, Express.js, MongoDB, AWS S3, Google Places API, OpenAI GPT-4
+
+## Setup
+npm install
+node main.js
+
+main.js - Entry point and server configuration
+storeController.js - Core business logic and API integrations
