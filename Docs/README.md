@@ -1,5 +1,7 @@
 ## Overview
-A Node.js/Express backend service that automatically discovers and enriches thrift store listings using location-based queries and AI-powered data curation.
+A Node.js/Express backend service that automatically discovers and enriches thrift store listings using location-based queries and AI-powered data curation.  
+Frontend repo link: https://github.com/vegettablee/clothingservice-frontend
+
 ## Core Functionality
 The service handles two main operations:
 
